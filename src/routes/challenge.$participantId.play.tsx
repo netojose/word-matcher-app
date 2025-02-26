@@ -7,6 +7,7 @@ import { getChallengeDetails } from "@/query-options/get-challenge-details";
 import WaitChallenge from "@/components/WaitChallenge";
 import { useEffect, useRef, useState } from "react";
 import { Snapshot } from "@/utils/types";
+import { toInt } from "radash";
 
 function Play() {
   const params = useParams({ from: "/challenge/$participantId/play" });
@@ -90,12 +91,11 @@ function Play() {
   const handleDragCancel = (data: EventPayload) => emit("drag:cancel", data);
 
   const handleDragEnd = (data: EventPayload) => {
-    setSnapshot((prev) => {
-      return {
-        ...prev,
-        filled: [...prev.filled, data],
-      };
-    });
+    setSnapshot((prev) => ({
+      ...prev,
+      locks: [...prev.locks, toInt(data.wordPosition)],
+      filled: [...prev.filled, data],
+    }));
 
     emit("drag:end", data);
   };
@@ -103,6 +103,7 @@ function Play() {
   const handleRemoveItem = (data: EventPayload) => {
     setSnapshot((prev) => ({
       ...prev,
+      locks: prev.locks.filter((id) => id !== data.wordPosition),
       filled: prev.filled.filter((item) => item.position !== data.position),
     }));
 
@@ -133,7 +134,7 @@ function Play() {
         />
       );
     case "FINISHED":
-      return <div>Challenge finished</div>;
+      return <div>This challenge is finished</div>;
   }
 }
 
