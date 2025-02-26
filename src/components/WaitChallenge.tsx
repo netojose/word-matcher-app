@@ -1,4 +1,7 @@
 import { ChallengeDetail } from "@/utils/types";
+import Title from "./Title";
+import Button from "./Button";
+import { css } from "@/styled-system/css";
 
 type Props = {
   challengeDetails: ChallengeDetail;
@@ -11,15 +14,23 @@ export default function WaitChallenge({ challengeDetails }: Props) {
     );
   };
   return (
-    <div>
-      <h1>{challengeDetails.challenges.name}</h1>
-      <p>{challengeDetails.name}</p>
-      <p>Wait for the challenge to start</p>
-      <input
-        type="button"
-        value="Copy link to invite"
-        onClick={handleCopyLink}
-      />
+    <div
+      className={css({
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+        maxW: 400,
+        margin: "0 auto",
+      })}
+    >
+      <Title text={challengeDetails.challenges.name} />
+      <p className={css({ fontWeight: "bold" })}>
+        Hello {challengeDetails.name}!
+      </p>
+      <p>Wait for other players to join the challenge..</p>
+      <Button type="button" onClick={handleCopyLink}>
+        Copy link to invite more players
+      </Button>
     </div>
   );
 }
