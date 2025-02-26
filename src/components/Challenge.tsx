@@ -41,6 +41,7 @@ type Props = {
   onDragCancel: FnEvent;
   onDragEnd: FnEvent;
   onRemoveItem: FnEvent;
+  onSubmit: VoidFunction;
 };
 
 export default function Challenge({
@@ -52,8 +53,8 @@ export default function Challenge({
   onDragCancel,
   onDragEnd,
   onRemoveItem,
+  onSubmit,
 }: Props) {
-  const [submitted, setSubmitted] = useState(false);
   const [paragraphs, setParagraphs] = useState<Array<ParagraphItems>>([]);
 
   useEffect(
@@ -127,13 +128,9 @@ export default function Challenge({
     onRemoveItem(data);
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-  };
-
   const remainingWords = placeholders.length - snapshot.filled.length;
   const submitDisabled =
-    remainingWords > 0 || submitted || placeholders.length < 1;
+    remainingWords > 0 || snapshot.submitted || placeholders.length < 1;
   const submitLabel =
     placeholders.length < 1
       ? "Loading challenge..."
@@ -174,7 +171,9 @@ export default function Challenge({
                     value={word?.word}
                     onRemove={handleRemove}
                     isCorrect={
-                      !submitted ? undefined : word?.position === item.position
+                      !snapshot.submitted
+                        ? undefined
+                        : word?.position === item.position
                     }
                   />
                 );
@@ -209,7 +208,7 @@ export default function Challenge({
         disabled={submitDisabled}
         style={{ cursor: submitDisabled ? "not-allowed" : "pointer" }}
         value={submitLabel}
-        onClick={handleSubmit}
+        onClick={onSubmit}
       />
     </div>
   );

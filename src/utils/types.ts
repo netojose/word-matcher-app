@@ -17,6 +17,7 @@ export type Challenge = {
 export type Snapshot = {
   locks: number[];
   filled: Array<{ wordPosition: UniqueIdentifier; position: number }>;
+  submitted: boolean;
 };
 
 export type ChallengeDetail = {

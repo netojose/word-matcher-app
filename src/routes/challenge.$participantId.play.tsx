@@ -19,7 +19,11 @@ function Play() {
 
   const socket = useRef<Socket>(null);
 
-  const [snapshot, setSnapshot] = useState<Snapshot>({ locks: [], filled: [] });
+  const [snapshot, setSnapshot] = useState<Snapshot>({
+    locks: [],
+    filled: [],
+    submitted: false,
+  });
 
   useEffect(
     function hydrateStatus() {
@@ -59,13 +63,17 @@ function Play() {
             case "DRAG_CANCEL":
             case "DRAG_END":
             case "REMOVE_ITEM":
-              setSnapshot({ filled: payload.filled, locks: payload.locks });
+              setSnapshot((prev) => ({
+                ...prev,
+                filled: payload.filled,
+                locks: payload.locks,
+              }));
               break;
             case "DRAG_MOVE":
               // console.log({ drag: payload });
               break;
             case "CHALLENGE_END":
-              // console.log({ challengeEnd: payload });
+              setSnapshot((prev) => ({ ...prev, submitted: true }));
               break;
           }
         }
@@ -110,6 +118,14 @@ function Play() {
     emit("remove:item", data);
   };
 
+  const handleSubmit = () => {
+    setSnapshot((prev) => ({ ...prev, submitted: true }));
+    socket.current?.emit("submit", {
+      challengeId: challengeDetails?.challenges.id,
+      participantId,
+    });
+  };
+
   if (!challengeDetails) {
     return <div>Loading...</div>;
   }
@@ -131,6 +147,7 @@ function Play() {
           onDragCancel={handleDragCancel}
           onDragEnd={handleDragEnd}
           onRemoveItem={handleRemoveItem}
+          onSubmit={handleSubmit}
         />
       );
     case "FINISHED":
