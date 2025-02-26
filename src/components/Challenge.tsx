@@ -11,6 +11,7 @@ import { Snapshot } from "@/utils/types";
 
 import Draggable from "@/components/Draggable";
 import Droppable from "@/components/Droppable";
+import Result from "./Result";
 
 type FilledWords = Array<{
   position: number;
@@ -210,6 +211,7 @@ export default function Challenge({
         value={submitLabel}
         onClick={onSubmit}
       />
+      <Result snapshot={snapshot} />
     </div>
   );
 }

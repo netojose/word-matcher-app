@@ -1,14 +1,16 @@
 import { UniqueIdentifier } from "@dnd-kit/core";
 
+export type Placeholder = {
+  word: string;
+  position: number;
+};
+
 export type Challenge = {
   createdAt: string;
   id: string;
   name: string;
   participantsPerTeam: number;
-  placeholders: Array<{
-    word: string;
-    position: number;
-  }>;
+  placeholders: Array<Placeholder>;
   status: "AVAILABLE" | "RUNNING" | "FINISHED";
   teamsAmount: number;
   text: string;
