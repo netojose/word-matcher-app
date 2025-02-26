@@ -1,7 +1,7 @@
-import { ChallengeDetailDto } from "@/utils/types";
+import { ChallengeDetail } from "@/utils/types";
 
 type Props = {
-  challengeDetails: ChallengeDetailDto;
+  challengeDetails: ChallengeDetail;
 };
 
 export default function WaitChallenge({ challengeDetails }: Props) {

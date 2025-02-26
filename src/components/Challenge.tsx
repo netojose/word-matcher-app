@@ -1,116 +1,141 @@
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  UniqueIdentifier,
+} from "@dnd-kit/core";
 import { useState, useEffect, createElement } from "react";
 import hash from "object-hash";
 import { toInt } from "radash";
+import { Snapshot } from "@/utils/types";
 
 import Draggable from "@/components/Draggable";
 import Droppable from "@/components/Droppable";
 
-// ==== FROM SERVER START ====
-const serverText = `
-Em uma {0}, o capital mais importante é o {1}. São pessoas de várias culturas, tradições, formações, naturezas e educações convivendo e vivendo juntas. A {2}, portanto, é fundamental para o relacionamento e o desenvolvimento das atividades. Nesse cenário, então, devemos respeitar as diferenças existentes, já que muitas vezes passamos mais tempo com nossos colegas de trabalho do que com nossos {3}.
-É muito comum, também, encontrarmos {4} que fazem o funcionário ser menos produtivo por se preocupar mais com o outro do que com o seu {5}. Em relação à segurança e meio ambiente é de suma importância que, além do respeito das normas e padrões da empresa, saibamos respeitar o {6}.
-`;
-
-type Word = {
-  word: string;
+type FilledWords = Array<{
   position: number;
-};
+  wordPosition: number;
+}>;
 
 type ParagraphItems = Array<
   { type: "text"; text: string } | { type: "placeholder"; position: number }
 >;
 
-const serverWords: Word[] = [
-  { word: "organização", position: 0 },
-  { word: "ser humano", position: 1 },
-  { word: "comunicação", position: 2 },
-  { word: "familiares", position: 3 },
-  { word: "divergências", position: 4 },
-  { word: "trabalho", position: 5 },
-  { word: "próximo", position: 6 },
-];
-// ==== FROM SERVER END ====
+export type EventPayload = {
+  position: number;
+  wordPosition: UniqueIdentifier;
+};
 
-export default function Challenge() {
+type FnEvent = (data: EventPayload) => void;
+
+type Props = {
+  snapshot: Snapshot;
+  text: string;
+  placeholders: Array<{
+    word: string;
+    position: number;
+  }>;
+  team: number;
+  setFilledWords: (items: FilledWords) => void;
+  onDragStart: FnEvent;
+  onDragCancel: FnEvent;
+  onDragEnd: FnEvent;
+  onRemoveItem: FnEvent;
+};
+
+export default function Challenge({
+  snapshot,
+  text,
+  team,
+  placeholders,
+  onDragStart,
+  onDragCancel,
+  onDragEnd,
+  onRemoveItem,
+}: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [paragraphs, setParagraphs] = useState<Array<ParagraphItems>>([]);
-  const [filledWords, setFilledWords] = useState<
-    Array<{ position: number; word: Word }>
-  >([]);
-  const [words, setWords] = useState<Word[]>([]);
 
-  useEffect(function loadData() {
-    setWords(serverWords);
+  useEffect(
+    function loadData() {
+      const textLines = text
+        .split("\n")
+        .map((p) => p.trim())
+        .filter((p) => p !== "");
+      const allContent: ParagraphItems[] = [];
 
-    const textLines = serverText.split("\n").filter((p) => p.trim() !== "");
-    const allContent: ParagraphItems[] = [];
+      for (const textLine of textLines) {
+        const auxItems: ParagraphItems = [];
 
-    for (const textLine of textLines) {
-      const auxItems: ParagraphItems = [];
+        const regex = /\{\d+\}/g;
 
-      const regex = /\{\d+\}/g;
+        let found: RegExpExecArray | null = null;
+        let start = 0;
+        do {
+          found = regex.exec(textLine);
 
-      let found: RegExpExecArray | null = null;
-      let start = 0;
-      do {
-        found = regex.exec(textLine);
+          if (found === null) {
+            continue;
+          }
 
-        if (found === null) {
-          continue;
+          const text = textLine.slice(start, found.index);
+          start = found.index + found[0].length;
+          const position = toInt(found[0].match(/\d+/)?.[0] ?? "");
+
+          auxItems.push({ type: "text", text });
+          auxItems.push({ type: "placeholder", position });
+        } while (found !== null);
+
+        const endText = textLine.substring(start);
+        if (endText) {
+          auxItems.push({ type: "text", text: endText });
         }
 
-        const text = textLine.slice(start, found.index);
-        start = found.index + found[0].length;
-        const position = toInt(found[0].match(/\d+/)?.[0] ?? "");
-
-        auxItems.push({ type: "text", text });
-        auxItems.push({ type: "placeholder", position });
-      } while (found !== null);
-
-      const endText = textLine.substring(start);
-      if (endText) {
-        auxItems.push({ type: "text", text: endText });
+        allContent.push(auxItems);
       }
 
-      allContent.push(auxItems);
-    }
-
-    setParagraphs(allContent);
-  }, []);
+      setParagraphs(allContent);
+    },
+    [text]
+  );
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    const position = active.data.current?.position;
+    const wordPosition = active.id;
+    onDragStart({ position, wordPosition });
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    const position = event.over?.data.current?.position;
+    const wordPosition = event.active.id;
+
     if (!event.over || event.over.disabled || !event.active) {
+      onDragCancel({ position, wordPosition });
       return;
     }
 
-    const wordPosition = event.active.id;
-    const position = toInt(event.over.id);
-
-    const word = words.find((word) => word.position === wordPosition);
+    const word = placeholders.find(
+      (placeholder) => placeholder.position === wordPosition
+    );
     if (!word) {
       return;
     }
 
-    setFilledWords((state) => [...state, { position, word: word }]);
+    onDragEnd({ position, wordPosition });
   };
 
-  const handleRemove = (position: number) => {
-    setFilledWords((state) => state.filter((fw) => fw.position !== position));
-  };
-
-  const getFilledWord = (position: number) => {
-    return filledWords.find((fw) => fw.position === position)?.word;
+  const handleRemove = (data: { position: number; wordPosition: number }) => {
+    onRemoveItem(data);
   };
 
   const handleSubmit = () => {
     setSubmitted(true);
   };
 
-  const remainingWords = words.length - filledWords.length;
-  const submitDisabled = remainingWords > 0 || submitted || words.length < 1;
+  const remainingWords = placeholders.length - snapshot.filled.length;
+  const submitDisabled =
+    remainingWords > 0 || submitted || placeholders.length < 1;
   const submitLabel =
-    words.length < 1
+    placeholders.length < 1
       ? "Loading challenge..."
       : remainingWords === 1
         ? "1 word remaining"
@@ -118,9 +143,11 @@ export default function Challenge() {
           ? `${remainingWords} words remaining`
           : "Submit";
 
+  const color = ["#f33", "#3f3", "#dca", "#aa3", "#933"][team - 1];
+
   return (
-    <div>
-      <DndContext onDragEnd={handleDragEnd}>
+    <div style={{ border: `solid 1px ${color}` }}>
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div style={{ margin: 35 }}>
           {paragraphs.map((paragraph) =>
             createElement(
@@ -131,11 +158,19 @@ export default function Challenge() {
                   return item.text;
                 }
 
-                const word = getFilledWord(item.position);
+                const filled = snapshot.filled.find(
+                  (filled) => filled.position === item.position
+                );
+
+                const word = placeholders.find(
+                  (placeholder) => placeholder.position === filled?.wordPosition
+                );
+
                 return (
                   <Droppable
                     key={item.position}
                     position={item.position}
+                    wordPosition={word?.position}
                     value={word?.word}
                     onRemove={handleRemove}
                     isCorrect={
@@ -158,14 +193,13 @@ export default function Challenge() {
             padding: 0,
           }}
         >
-          {words.map((word) => (
+          {placeholders.map((placeholder, index) => (
             <Draggable
-              key={word.word}
-              text={word.word}
-              id={word.position}
-              disabled={
-                !!filledWords.find((fw) => fw.word.position === word.position)
-              }
+              key={placeholder.word}
+              text={placeholder.word}
+              wordPosition={placeholder.position}
+              position={index + 1}
+              disabled={snapshot.locks.includes(placeholder.position)}
             />
           ))}
         </ul>

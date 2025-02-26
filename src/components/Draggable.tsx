@@ -3,13 +3,19 @@ import { CSS } from "@dnd-kit/utilities";
 
 type Props = {
   text: string;
-  id: number;
+  wordPosition: number;
+  position: number;
   disabled?: boolean;
 };
 
-export default function Draggable({ text, id, disabled }: Props) {
+export default function Draggable({
+  text,
+  wordPosition,
+  position,
+  disabled,
+}: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id, disabled });
+    useDraggable({ id: wordPosition, disabled, data: { position } });
 
   return (
     <li

@@ -2,20 +2,26 @@ import { useDroppable } from "@dnd-kit/core";
 
 type Props = {
   position: number;
+  wordPosition?: number;
   value?: string;
   isCorrect?: boolean;
-  onRemove: (position: number) => void;
+  onRemove: (data: { position: number; wordPosition: number }) => void;
 };
 
 export default function Droppable({
   position,
+  wordPosition,
   value,
   isCorrect,
   onRemove,
 }: Props) {
   const disabled = !!value;
   const onRemoveDisabled = isCorrect !== undefined;
-  const { isOver, setNodeRef } = useDroppable({ id: position, disabled });
+  const { isOver, setNodeRef } = useDroppable({
+    id: position,
+    disabled,
+    data: { position },
+  });
 
   const style = {
     borderBottomColor: isOver ? "yellow" : disabled ? "red" : "green",
@@ -37,7 +43,9 @@ export default function Droppable({
       {value ?? "\u00A0"}{" "}
       {value && (
         <button
-          onClick={() => onRemove(position)}
+          onClick={() =>
+            wordPosition ? onRemove({ position, wordPosition }) : undefined
+          }
           style={{
             height: 10,
             width: 10,
