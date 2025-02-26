@@ -1,4 +1,5 @@
 import { Snapshot } from "@/utils/types";
+import { Link } from "@tanstack/react-router";
 import { ReactNode } from "react";
 
 type Props = {
@@ -16,8 +17,13 @@ export default function Result({ snapshot }: Props): ReactNode {
   );
 
   return (
-    <p>
-      You got {correctItems} out of {snapshot.filled.length} correct
-    </p>
+    <div>
+      <p>
+        You got {correctItems} out of {snapshot.filled.length} correct
+      </p>
+      <p>
+        <Link to="/">Start a new challenge</Link>
+      </p>
+    </div>
   );
 }

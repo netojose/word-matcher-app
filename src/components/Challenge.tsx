@@ -1,12 +1,20 @@
 import {
   DndContext,
   DragEndEvent,
+  DragMoveEvent,
   DragStartEvent,
   UniqueIdentifier,
 } from "@dnd-kit/core";
-import { useState, useEffect, createElement } from "react";
+import {
+  useState,
+  useEffect,
+  createElement,
+  useCallback,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import hash from "object-hash";
-import { toInt } from "radash";
+import { toInt, throttle, omit } from "radash";
 import { Snapshot } from "@/utils/types";
 
 import Draggable from "@/components/Draggable";
@@ -27,6 +35,16 @@ export type EventPayload = {
   wordPosition: UniqueIdentifier;
 };
 
+export type EventPayloadDragMove = {
+  delta: { x: number; y: number };
+  wordPosition: UniqueIdentifier;
+};
+
+export type ChallengeMethods = {
+  move: (data: EventPayloadDragMove) => void;
+  reset: (wordPosition: number) => void;
+};
+
 type FnEvent = (data: EventPayload) => void;
 
 type Props = {
@@ -42,21 +60,44 @@ type Props = {
   onDragCancel: FnEvent;
   onDragEnd: FnEvent;
   onRemoveItem: FnEvent;
+  onDragMove: (data: EventPayloadDragMove) => void;
   onSubmit: VoidFunction;
 };
 
-export default function Challenge({
-  snapshot,
-  text,
-  team,
-  placeholders,
-  onDragStart,
-  onDragCancel,
-  onDragEnd,
-  onRemoveItem,
-  onSubmit,
-}: Props) {
+export default forwardRef<ChallengeMethods, Props>(function Challenge(
+  {
+    snapshot,
+    text,
+    team,
+    placeholders,
+    onDragStart,
+    onDragCancel,
+    onDragEnd,
+    onRemoveItem,
+    onSubmit,
+    onDragMove,
+  }: Props,
+  ref
+) {
   const [paragraphs, setParagraphs] = useState<Array<ParagraphItems>>([]);
+
+  const [deltas, setDeltas] = useState<
+    Record<string, { x: number; y: number }>
+  >({});
+
+  useImperativeHandle(ref, () => {
+    return {
+      move: (data: EventPayloadDragMove): void => {
+        setDeltas((prev) => ({
+          ...prev,
+          [`word:${data.wordPosition}`]: data.delta,
+        }));
+      },
+      reset: (wordPosition: number) => {
+        setDeltas((prev) => omit(prev, [`word:${wordPosition}`]));
+      },
+    };
+  }, []);
 
   useEffect(
     function loadData() {
@@ -106,6 +147,16 @@ export default function Challenge({
     onDragStart({ position, wordPosition });
   };
 
+  const onMoveHandler = useCallback(
+    (event: DragMoveEvent) => {
+      const wordPosition = event.active.id;
+      onDragMove({ delta: event.delta, wordPosition });
+    },
+    [onDragMove]
+  );
+
+  const handleDragMove = throttle({ interval: 100 }, onMoveHandler);
+
   const handleDragEnd = (event: DragEndEvent) => {
     const position = event.over?.data.current?.position;
     const wordPosition = event.active.id;
@@ -145,7 +196,11 @@ export default function Challenge({
 
   return (
     <div style={{ border: `solid 1px ${color}` }}>
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext
+        onDragStart={handleDragStart}
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
+      >
         <div style={{ margin: 35 }}>
           {paragraphs.map((paragraph) =>
             createElement(
@@ -198,6 +253,7 @@ export default function Challenge({
               key={placeholder.word}
               text={placeholder.word}
               wordPosition={placeholder.position}
+              delta={deltas[`word:${placeholder.position}`]}
               position={index + 1}
               disabled={snapshot.locks.includes(placeholder.position)}
             />
@@ -214,4 +270,4 @@ export default function Challenge({
       <Result snapshot={snapshot} />
     </div>
   );
-}
+});

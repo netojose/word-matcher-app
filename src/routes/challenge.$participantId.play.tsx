@@ -2,7 +2,11 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { io, Socket } from "socket.io-client";
 
-import Challenge, { EventPayload } from "@/components/Challenge";
+import Challenge, {
+  ChallengeMethods,
+  EventPayload,
+  EventPayloadDragMove,
+} from "@/components/Challenge";
 import { getChallengeDetails } from "@/query-options/get-challenge-details";
 import WaitChallenge from "@/components/WaitChallenge";
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +22,7 @@ function Play() {
   const queryClient = useQueryClient();
 
   const socket = useRef<Socket>(null);
+  const challengeRef = useRef<ChallengeMethods>(null);
 
   const [snapshot, setSnapshot] = useState<Snapshot>({
     locks: [],
@@ -58,6 +63,10 @@ function Play() {
             return;
           }
 
+          if (event === "DRAG_CANCEL" || event === "DRAG_END") {
+            challengeRef.current?.reset(payload.wordPosition);
+          }
+
           switch (event) {
             case "DRAG_START":
             case "DRAG_CANCEL":
@@ -70,7 +79,10 @@ function Play() {
               }));
               break;
             case "DRAG_MOVE":
-              // console.log({ drag: payload });
+              challengeRef.current?.move({
+                wordPosition: payload.wordPosition,
+                delta: payload.delta,
+              });
               break;
             case "CHALLENGE_END":
               setSnapshot((prev) => ({ ...prev, submitted: true }));
@@ -118,6 +130,15 @@ function Play() {
     emit("remove:item", data);
   };
 
+  const handleDragMove = ({ delta, wordPosition }: EventPayloadDragMove) => {
+    socket.current?.emit("drag:move", {
+      challengeId: challengeDetails?.challenges.id,
+      participantId,
+      wordPosition,
+      delta,
+    });
+  };
+
   const handleSubmit = () => {
     setSnapshot((prev) => ({ ...prev, submitted: true }));
     socket.current?.emit("submit", {
@@ -148,6 +169,8 @@ function Play() {
           onDragEnd={handleDragEnd}
           onRemoveItem={handleRemoveItem}
           onSubmit={handleSubmit}
+          onDragMove={handleDragMove}
+          ref={challengeRef}
         />
       );
     case "FINISHED":
