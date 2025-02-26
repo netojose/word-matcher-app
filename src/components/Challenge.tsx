@@ -20,6 +20,8 @@ import { Snapshot } from "@/utils/types";
 import Draggable from "@/components/Draggable";
 import Droppable from "@/components/Droppable";
 import Result from "./Result";
+import { css } from "@/styled-system/css";
+import Button from "./Button";
 
 type FilledWords = Array<{
   position: number;
@@ -195,13 +197,14 @@ export default forwardRef<ChallengeMethods, Props>(function Challenge(
   const color = ["#f33", "#3f3", "#dca", "#aa3", "#933"][team - 1];
 
   return (
-    <div style={{ border: `solid 1px ${color}` }}>
+    <div>
+      <div style={{ backgroundColor: color }} className={css({ height: 1 })} />
       <DndContext
         onDragStart={handleDragStart}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
-        <div style={{ margin: 35 }}>
+        <div className={css({ margin: 35 })}>
           {paragraphs.map((paragraph) =>
             createElement(
               "p",
@@ -239,14 +242,15 @@ export default forwardRef<ChallengeMethods, Props>(function Challenge(
         </div>
 
         <ul
-          style={{
+          className={css({
             display: "flex",
             flexDirection: "row",
-            gap: 10,
+            justifyContent: "center",
+            gap: 2,
             listStyle: "none",
-            margin: 40,
+            margin: 4,
             padding: 0,
-          }}
+          })}
         >
           {placeholders.map((placeholder, index) => (
             <Draggable
@@ -260,13 +264,11 @@ export default forwardRef<ChallengeMethods, Props>(function Challenge(
           ))}
         </ul>
       </DndContext>
-      <input
-        type="button"
-        disabled={submitDisabled}
-        style={{ cursor: submitDisabled ? "not-allowed" : "pointer" }}
-        value={submitLabel}
-        onClick={onSubmit}
-      />
+      <div className={css({ display: "flex", justifyContent: "center" })}>
+        <Button type="button" disabled={submitDisabled} onClick={onSubmit}>
+          {submitLabel}
+        </Button>
+      </div>
       <Result snapshot={snapshot} />
     </div>
   );

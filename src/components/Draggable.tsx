@@ -1,3 +1,4 @@
+import { css } from "@/styled-system/css";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { toInt } from "radash";
@@ -29,11 +30,17 @@ export default function Draggable({
   return (
     <li
       ref={setNodeRef}
+      className={css({
+        borderColor: "green.400",
+        backgroundColor: "white",
+        borderWidth: 1,
+        borderStyle: "solid",
+        paddingX: 2,
+      })}
       style={{
-        // transform: transform ? CSS.Translate.toString(transform) : undefined,
         transform: cssTransform,
         cursor: disabled ? "not-allowed" : isDragging ? "grabbing" : "grab",
-        opacity: disabled ? 0.5 : 1,
+        opacity: disabled ? 0.3 : 1,
       }}
       {...listeners}
       {...attributes}

@@ -17,4 +17,18 @@ export default defineConfig({
 
   // The output directory for your css system
   outdir: "styled-system",
+
+  patterns: {
+    extend: {
+      input: {
+        transform() {
+          return {
+            padding: 2,
+            borderRadius: 4,
+            border: "1px solid #ccc",
+          };
+        },
+      },
+    },
+  },
 });

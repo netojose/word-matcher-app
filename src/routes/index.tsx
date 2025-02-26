@@ -5,6 +5,12 @@ import { useMutation } from "@tanstack/react-query";
 import { mutationFn } from "@/utils/fetch";
 import { JoinChallenge } from "@/utils/types";
 
+import { css } from "@/styled-system/css";
+import Input from "@/components/Input";
+import Select from "@/components/Select";
+import Button from "@/components/Button";
+import Title from "@/components/Title";
+
 type Inputs = {
   userName: string;
   challengeName: string;
@@ -32,49 +38,62 @@ function Index() {
 
   return (
     <div>
-      <h3>Create a new challenge</h3>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          type="text"
+      <Title text="Create a new challenge" />
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className={css({
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
+          maxW: 400,
+          margin: "0 auto",
+        })}
+      >
+        <Input
           placeholder="Your name"
           maxLength={30}
           required
           {...register("userName")}
         />
 
-        <input
-          type="text"
+        <Input
           placeholder="Challenge name"
           maxLength={30}
           required
           {...register("challengeName")}
         />
 
-        <select required defaultValue="" {...register("teamsAmount")}>
-          <option value="" disabled>
-            Teams amount
-          </option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-        </select>
+        <Select
+          required
+          defaultValue=""
+          options={[
+            { label: "Teams amount", value: "", disabled: true },
+            { label: "1", value: "1" },
+            { label: "2", value: "2" },
+            { label: "3", value: "3" },
+            { label: "4", value: "4" },
+            { label: "5", value: "5" },
+          ]}
+          {...register("teamsAmount")}
+        />
 
-        <select required defaultValue="" {...register("participantsPerTeam")}>
-          <option value="" disabled>
-            Participants per team
-          </option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-        </select>
+        <Select
+          required
+          defaultValue=""
+          options={[
+            { label: "Participants per team", value: "", disabled: true },
+            { label: "1", value: "1" },
+            { label: "2", value: "2" },
+            { label: "3", value: "3" },
+            { label: "4", value: "4" },
+            { label: "5", value: "5" },
+          ]}
+          {...register("participantsPerTeam")}
+        />
 
-        <button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={isPending}>
           {isPending ? "Creating..." : "Create"}
-        </button>
+        </Button>
       </form>
     </div>
   );

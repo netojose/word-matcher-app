@@ -12,6 +12,8 @@ import WaitChallenge from "@/components/WaitChallenge";
 import { useEffect, useRef, useState } from "react";
 import { Snapshot } from "@/utils/types";
 import { toInt } from "radash";
+import { css } from "@/styled-system/css";
+import Loader from "@/components/Loader";
 
 function Play() {
   const params = useParams({ from: "/challenge/$participantId/play" });
@@ -148,7 +150,7 @@ function Play() {
   };
 
   if (!challengeDetails) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   const { text, placeholders } = challengeDetails.challenges;
@@ -174,7 +176,11 @@ function Play() {
         />
       );
     case "FINISHED":
-      return <div>This challenge is finished</div>;
+      return (
+        <div className={css({ fontSize: "3xl" })}>
+          This challenge is finished
+        </div>
+      );
   }
 }
 

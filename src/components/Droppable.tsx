@@ -1,3 +1,4 @@
+import { css } from "@/styled-system/css";
 import { useDroppable } from "@dnd-kit/core";
 
 type Props = {
@@ -46,15 +47,18 @@ export default function Droppable({
           onClick={() =>
             wordPosition ? onRemove({ position, wordPosition }) : undefined
           }
-          style={{
-            height: 10,
-            width: 10,
+          className={css({
+            height: "10px",
+            width: "10px",
             padding: 0,
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor: onRemoveDisabled ? "not-allowed" : "pointer",
-          }}
+            cursor: "pointer",
+            _disabled: {
+              cursor: "not-allowed",
+            },
+          })}
           disabled={onRemoveDisabled}
         >
           x

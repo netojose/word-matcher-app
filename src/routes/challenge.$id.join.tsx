@@ -4,6 +4,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { JoinChallenge } from "@/utils/types";
 import { mutationFn } from "@/utils/fetch";
+import Input from "@/components/Input";
+import { css } from "@/styled-system/css";
+import Button from "@/components/Button";
+import Title from "@/components/Title";
 
 type Inputs = {
   name: string;
@@ -34,19 +38,27 @@ function Challenge() {
 
   return (
     <div>
-      <h3>Join on this challenge</h3>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          type="text"
+      <Title text="Join on this challenge" />
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className={css({
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
+          maxW: 400,
+          margin: "0 auto",
+        })}
+      >
+        <Input
           placeholder="Your name"
           maxLength={30}
           required
           {...register("name")}
         />
 
-        <button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={isPending}>
           {isPending ? "Loading..." : "Join"}
-        </button>
+        </Button>
       </form>
     </div>
   );
